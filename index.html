@@ -3,12 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rollo</title>
+    <title>Rollo — A Game of Flicks & Physics</title>
+    <meta name="description" content="Rollo is a colorful local multiplayer physics game for two players on one device. Flick, collide, score.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sunny: #F0D23C;
+            --ocean: #6496DC;
+            --forest: #5ABE6E;
+            --berry: #A078C8;
+            --coral: #E67878;
+            --mint: #6EC3B9;
+            --sunny-zone: #FCF5D7;
+            --ocean-zone: #DAE6F5;
+            --forest-zone: #DAF0DE;
+            --berry-zone: #EBE1F5;
+            --coral-zone: #F5DEDE;
+            --mint-zone: #DCF8EE;
+            --text: #1a1a1a;
+            --text-muted: #6b6b6b;
+            --bg: #FAFAF8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* ── Floating orbs ── */
+        .orb-field {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            animation: orb-float 14s ease-in-out infinite, orb-in 0.8s ease-out forwards;
+        }
+
+        .orb-1  { width: 320px; height: 320px; background: var(--sunny); top: -5%; right: -4%; animation-delay: 0s, 0s; opacity: 0; }
+        .orb-2  { width: 200px; height: 200px; background: var(--ocean); bottom: 8%; left: -3%; animation-delay: 2s, 0.15s; }
+        .orb-3  { width: 140px; height: 140px; background: var(--forest); top: 30%; right: 8%; animation-delay: 4s, 0.3s; }
+        .orb-4  { width: 100px; height: 100px; background: var(--coral); bottom: 25%; right: 15%; animation-delay: 6s, 0.45s; }
+        .orb-5  { width: 180px; height: 180px; background: var(--berry); top: 12%; left: 10%; animation-delay: 3s, 0.6s; }
+        .orb-6  { width: 80px;  height: 80px;  background: var(--mint); bottom: 40%; left: 20%; animation-delay: 5s, 0.75s; }
+        .orb-7  { width: 60px;  height: 60px;  background: var(--sunny); bottom: 12%; right: 30%; animation-delay: 7s, 0.9s; }
+        .orb-8  { width: 110px; height: 110px; background: var(--ocean); top: 55%; left: 5%; animation-delay: 1s, 1.05s; }
+        .orb-9  { width: 45px;  height: 45px;  background: var(--coral); top: 18%; right: 30%; animation-delay: 8s, 1.1s; }
+        .orb-10 { width: 70px;  height: 70px;  background: var(--forest); bottom: 5%; left: 40%; animation-delay: 9s, 1.2s; }
+
+        @keyframes orb-float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(12px, -18px) scale(1.03); }
+            50% { transform: translate(-8px, 10px) scale(0.97); }
+            75% { transform: translate(15px, 8px) scale(1.02); }
+        }
+
+        @keyframes orb-in {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 0.18; transform: scale(1); }
+        }
+
+        /* ── Content card ── */
+        .card {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 520px;
+            width: 100%;
+        }
+
+        .title {
+            font-family: 'DM Serif Text', serif;
+            font-size: clamp(4.5rem, 12vw, 8rem);
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            line-height: 0.9;
+            margin-bottom: 0.15em;
+            background: linear-gradient(135deg, var(--coral) 0%, var(--sunny) 25%, var(--forest) 50%, var(--ocean) 75%, var(--berry) 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 8s ease-in-out infinite, title-in 1s ease-out 0.2s both;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes title-in {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tagline {
+            font-size: clamp(1.1rem, 3vw, 1.35rem);
+            font-weight: 300;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+            margin-bottom: 2.5rem;
+            animation: fade-up 0.8s ease-out 0.5s both;
+        }
+
+        .tagline em {
+            font-family: 'DM Serif Text', serif;
+            font-style: italic;
+            color: var(--text);
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Feature pills ── */
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 3rem;
+            animation: fade-up 0.8s ease-out 0.7s both;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+
+        .pill-sunny  { background: var(--sunny-zone); color: #8a7a10; }
+        .pill-ocean  { background: var(--ocean-zone); color: #3a5a8a; }
+        .pill-forest { background: var(--forest-zone); color: #2a6a3a; }
+        .pill-coral  { background: var(--coral-zone); color: #8a3a3a; }
+        .pill-berry  { background: var(--berry-zone); color: #5a3a7a; }
+        .pill-mint   { background: var(--mint-zone); color: #2a6a5a; }
+
+        /* ── App Store badge ── */
+        .badge-wrap {
+            margin-bottom: 3rem;
+            animation: fade-up 0.8s ease-out 0.9s both;
+        }
+
+        .app-store-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: var(--text);
+            color: #fff;
+            border-radius: 14px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .app-store-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .app-store-badge svg { flex-shrink: 0; }
+
+        .badge-text-small {
+            font-size: 0.7rem;
+            font-weight: 400;
+            opacity: 0.8;
+            display: block;
+            text-align: left;
+        }
+
+        .badge-text-large {
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: block;
+            text-align: left;
+            line-height: 1.1;
+        }
+
+        /* ── Color palette strip ── */
+        .palette {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 3rem;
+            animation: fade-up 0.8s ease-out 1.1s both;
+        }
+
+        .swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            cursor: default;
+        }
+
+        .swatch:hover {
+            transform: scale(1.3);
+        }
+
+        /* ── Footer links ── */
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            animation: fade-up 0.8s ease-out 1.3s both;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            .orb-1 { width: 200px; height: 200px; }
+            .orb-2 { width: 140px; height: 140px; }
+            .orb-3 { width: 90px; height: 90px; }
+            .orb-5 { width: 120px; height: 120px; }
+            .orb-8 { width: 70px; height: 70px; }
+
+            .features { gap: 8px; }
+            .pill { padding: 6px 14px; font-size: 0.8rem; }
+        }
+    </style>
 </head>
 <body>
-    <ul>
-        <li><a href="privacy.html">Privacy Policy</a></li>
-        <li><a href="support.html">Support</a></li>
-    </ul>
+    <div class="orb-field">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+        <div class="orb orb-5"></div>
+        <div class="orb orb-6"></div>
+        <div class="orb orb-7"></div>
+        <div class="orb orb-8"></div>
+        <div class="orb orb-9"></div>
+        <div class="orb orb-10"></div>
+    </div>
+
+    <section class="hero">
+        <div class="card">
+            <h1 class="title">Rollo</h1>
+            <p class="tagline">A game of <em>flicks</em> &amp; <em>physics</em></p>
+
+            <div class="features">
+                <span class="pill pill-sunny">Two Players</span>
+                <span class="pill pill-ocean">One Device</span>
+                <span class="pill pill-forest">Pure Physics</span>
+                <span class="pill pill-coral">No Ads</span>
+                <span class="pill pill-berry">No Data</span>
+                <span class="pill pill-mint">All Fun</span>
+            </div>
+
+            <div class="badge-wrap">
+                <a href="#" class="app-store-badge">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <div>
+                        <span class="badge-text-small">Download on the</span>
+                        <span class="badge-text-large">App Store</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="palette">
+                <div class="swatch" style="background: var(--sunny)" title="Sunny"></div>
+                <div class="swatch" style="background: var(--ocean)" title="Ocean"></div>
+                <div class="swatch" style="background: var(--forest)" title="Forest"></div>
+                <div class="swatch" style="background: var(--berry)" title="Berry"></div>
+                <div class="swatch" style="background: var(--coral)" title="Coral"></div>
+                <div class="swatch" style="background: var(--mint)" title="Mint"></div>
+            </div>
+
+            <nav class="footer-links">
+                <a href="support.html">Support</a>
+                <a href="privacy.html">Privacy Policy</a>
+            </nav>
+        </div>
+    </section>
 </body>
 </html>
